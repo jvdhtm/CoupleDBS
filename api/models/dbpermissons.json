@@ -1,0 +1,9 @@
+{
+    "number":"1",
+    "type": "object",
+    "title": "dbpermission",
+    "properties": {
+      "path": { "type": "string"}
+    }
+
+}

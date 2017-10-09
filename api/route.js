@@ -1,7 +1,8 @@
+var functions = require('./global/dbsm.js');
+var APIDB = require('./routes/api.js');
+
 var routers = function (app)
 {
-	projectsAPi(app,dblibrary,functions);
-	RESTfulApi(app,dblibrary,functions);
+	APIDB(app,functions);
 }
-
 module.exports = routers;

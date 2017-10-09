@@ -1,7 +1,6 @@
 var path = require('path');
 var fs = require('fs');
 var glob = require("glob");
-var walk  = require('walk');
 
 module.exports = {
   readJson:function (src,cb)
@@ -12,12 +11,12 @@ module.exports = {
       var result = [];
        for (var i in files){
          var name = files[i];
-         var obj = JSON.parse(fs.readFileSync(src, 'utf8'));
+         var obj = JSON.parse(fs.readFileSync(name, 'utf8'));
          result[i] = obj;
 
        }
        cb(result);
     });
-    return obj;
+    return '';
   }
 }

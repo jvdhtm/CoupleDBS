@@ -1,6 +1,6 @@
 
 var Sequelize = require('sequelize');
-var Dbconfig = require('db.config');
+var Dbconfig = require('./db.config');
 
 
 module.exports = {
@@ -8,82 +8,102 @@ module.exports = {
   DBNoSql:'',
 	validators:[],
 	schemas:[],
-	helpers:require('helper'),
-	loadSchemasSql:function(cb){
+	helpers:require('./helper'),
+	loadSchemasSql:function(cb,obj){
 
-		var self = this;
-		var object = helpers.readJson('api/model/*.json',function(obj){
-
-
+			var self = this;
 			var models = [];
 			for(x in obj)
 			{
 			  var schema = obj[x];
-			  var title  =   schema.title;
-			  models[title] = schema;
+			  var number  =   schema.number;
+			  models[number] = schema;
 			}
-			function walkThroughEach(result,titles,schema,obj)
+
+			console.log(models);
+
+			var result = [];
+			for(var x = 1; x <  models.length ; x++  )
 			{
 
+				var schema  =  models[x];
 				var prop  =   schema.properties;
 				var title  =   schema.title;
-				var model = {};
+
+				var model = [];
 				var children = [];
 				for(y in prop)
 				{
-				  var modeltype = prop[y].type;
-				  var default = prop[y].default;
-				  if(modeltype == 'array' )
-				  {
-					  var childModel =  prop.items[0].instanceof;
-					  var child = obj[childModel];
-					  childModel = walkThroughEach(result,titles,child,obj);
-					  children.push(childModel);
-				  }
-				  else {
-						model[modeltype] = {
-						  type:modeltype,
-						  defaultValue:default
-						}
-				  }
-				}
-				if(titles.indexOf(title) == -1 )
-				{
-				  titles.push(title);
-				  result[title] = sequelize.define(title, model);
-				  for(x in childen)
-				  {
-					result.hasMany(children);
+					var eachprop = prop[y];
+					var type = prop[y].type;
+					var valuedef = prop[y].default;
 
-				  }
+
+					if(type =='string')
+					{
+						modeltype = Sequelize.STRING;
+					}
+					if(type =='integer')
+					{
+						modeltype = Sequelize.INTEGER;
+					}
+					if(type =='bigint')
+					{
+						modeltype = Sequelize.BIGINT;
+					}
+					if(type =='date')
+					{
+						modeltype = Sequelize.DATE;
+					}
+					if(type =='text')
+					{
+						modeltype = Sequelize.TEXT;
+					}
+					else {
+
+						modeltype = Sequelize.TEXT;
+					}
+
+					if(modeltype == 'array' )
+					{
+						var childModel =  prop.items[0].instanceof;
+						children.push(childModel);
+					}
+					else {
+						if(valuedef)
+						{
+							model[y] = {
+								type:modeltype,
+								defaultValue:valuedef
+							}
+						}
+						else {
+							model[y] = {
+								type:modeltype
+							}
+
+						}
+
+					}
 				}
-				return result[title];
+
+				console.log('model >'+title);
+				console.log(model);
+				result[title] = self.DBSql.define(title, model);
+				for(x in children)
+				{
+					result[title].hasMany(result[children[x]]);
+				}
+
 			}
 
-			function  walkThrough(obj) {
-					var result = [];
-
-					for(x in obj)
-					{
-					  var schema = obj[x];
-					  var titles = []
-					  walkThroughEach(result,titles,schema,obj);
-					}
-					return result;
-			  }
-
-
-			var result = walkThrough(models);
+			self.DBSql.sync();
 			cb(result);
 
-		});
 	},
 	loadSchemasNosql:function()
 	{
 		var self = this;
-		var object = helpers.readJson('api/model/*.json',function(obj){
-
-		});
 
 	},
 	validate : function (tableName,data)
@@ -98,43 +118,33 @@ module.exports = {
 	{
 
 	},
-	createTables: function()
-	{
-
-	},
 	removeData:function(tableName,data,cb)
 	{
 
 	},
-	initdb: function (conn, cb)
+	initTables:function (cb,jsonSchemas)
 	{
+		var self = this;
+		var object = self.helpers.readJson('api/models/*.json',function(obj){
 
+				self.loadSchemasSql(function(result){
 
-	},
-	initUsertables: function (conn, cb)
-	{
-		// getJson
+						console.log(result);
 
-
-
-
-
-	},
-	load: function(functions)
-	{
-		this.helpers = functions;
+				},obj);
+		});
 	},
 	init: function(app,cb){
 
-    /*
-		 self.DBSql = new Sequelize(Dbconfig.Dbname ,Dbconfig.username, Dbconfig.password , {
+    /**/
+			var self = this;
+		 self.DBSql = new Sequelize(Dbconfig.Dbname ,Dbconfig.user, Dbconfig.password , {
 			  host: Dbconfig.host ,
 			  port: Dbconfig.port,
-				dialect: 'mariadb'
-
+				dialect: 'mysql'
 			});
-      */
 
+			self.initTables(cb,'null')
 
 	}
 }

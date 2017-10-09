@@ -1,7 +1,7 @@
 module.exports = {
-  user:'superadmin'
+  user:'superadmin',
   password:'User1234@',
   Dbname:'superheroDB',
   host:'localhost',
-  Port:'5432',
+  Port:'3306',
 }
