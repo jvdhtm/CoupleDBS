@@ -5,7 +5,7 @@
     "properties": {
       "name": { "type": "string" },
       "permissions": {
-          "type":"array",
+          "type":"many",
           "items": [
             { "instanceof":"dbpermissions"}
           ]

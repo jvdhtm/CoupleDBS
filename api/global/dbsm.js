@@ -1,15 +1,17 @@
 
 var Sequelize = require('sequelize');
 var Dbconfig = require('./db.config');
-
+var epilogue = require('epilogue');
+var http = require('http');
 
 module.exports = {
 	DBSql:'',
   DBNoSql:'',
+	server:'',
 	validators:[],
 	schemas:[],
 	helpers:require('./helper'),
-	loadSchemasSql:function(cb,obj){
+	loadSchemasSql:function(obj){
 
 			var self = this;
 			var models = [];
@@ -19,11 +21,8 @@ module.exports = {
 			  var number  =   schema.number;
 			  models[number] = schema;
 			}
-
-			console.log(models);
-
 			var result = [];
-			for(var x = 1; x <  models.length ; x++  )
+			for(var x = 1; x <  models.length ; x++ )
 			{
 
 				var schema  =  models[x];
@@ -59,14 +58,10 @@ module.exports = {
 					{
 						modeltype = Sequelize.TEXT;
 					}
-					else {
 
-						modeltype = Sequelize.TEXT;
-					}
-
-					if(modeltype == 'array' )
+					if(type == 'many' || type == 'one')
 					{
-						var childModel =  prop.items[0].instanceof;
+						var childModel =  eachprop.items[0].instanceof;
 						children.push(childModel);
 					}
 					else {
@@ -83,22 +78,47 @@ module.exports = {
 							}
 
 						}
-
 					}
 				}
 
 				console.log('model >'+title);
-				console.log(model);
+				//console.log(model);
 				result[title] = self.DBSql.define(title, model);
-				for(x in children)
+				for(var z in children)
 				{
-					result[title].hasMany(result[children[x]]);
+					console.log('children >'+children[z]);
+					if(type == 'many')
+					{
+						result[title].hasMany(result[children[z]]);
+					}
+					if(type == 'one')
+					{
+						result[title].hasOne(result[children[z]]);
+					}
+
 				}
 
-			}
+				var endpoints = ['/'+title, '/'+title+'/:id']
+				console.log(endpoints);
+				var userResource = epilogue.resource({
+					model: result[title],
+					endpoints: endpoints
+				});
 
-			self.DBSql.sync();
-			cb(result);
+
+
+
+			}
+			self.DBSql.sync().then(function() {
+
+				server.listen(function() {
+				      var host = 'localhost',
+				          port = '8000'
+
+				      console.log('listening at http://%s:%s', host, port);
+				    });
+
+			});
 
 	},
 	loadSchemasNosql:function()
@@ -106,7 +126,7 @@ module.exports = {
 		var self = this;
 
 	},
-	validate : function (tableName,data)
+	validate : function (tableName,data,cb)
 	{
 
 	},
@@ -126,10 +146,7 @@ module.exports = {
 	{
 		var self = this;
 		var object = self.helpers.readJson('api/models/*.json',function(obj){
-
 				self.loadSchemasSql(function(result){
-
-						console.log(result);
 
 				},obj);
 		});
@@ -144,6 +161,12 @@ module.exports = {
 				dialect: 'mysql'
 			});
 
+			epilogue.initialize({
+			  app: app,
+			  sequelize: self.DBSql
+			});
+
+			self.server = http.createServer(app);
 			self.initTables(cb,'null')
 
 	}

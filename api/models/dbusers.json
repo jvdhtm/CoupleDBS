@@ -6,7 +6,7 @@
       "name": { "type": "string"},
       "user": { "type": "string", "format": "email" },
       "roles": {
-          "type":"array",
+          "type":"one",
           "items": [
             { "instanceof":"dbroles"}
           ]
