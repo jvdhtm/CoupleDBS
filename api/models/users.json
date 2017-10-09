@@ -1,0 +1,21 @@
+{
+    "type": "object",
+    "title": "Users",
+    "properties": {
+      "id": {
+          "description": "positive integer or string of digits",
+          "type": "integer",
+          "pattern": "^[1-9][0-9]*$",
+          "minimum": 1
+      },
+      "name": { "type": "string"},
+      "user": { "type": "string", "format": "email" },
+      "roles": {
+          "type":"array",
+          "items": [
+            { "instanceof":"roles"}
+          ]
+        }
+    }
+
+}

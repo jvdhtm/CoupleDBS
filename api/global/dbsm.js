@@ -5,10 +5,10 @@ var Dbconfig = require('db.config');
 
 module.exports = {
 	DBSql:'',
-    DBNoSql:'',
+  DBNoSql:'',
 	validators:[],
 	schemas:[],
-	helpers:'',
+	helpers:require('helper'),
 	loadSchemasSql:function(cb){
 
 		var self = this;
@@ -41,10 +41,10 @@ module.exports = {
 					  children.push(childModel);
 				  }
 				  else {
-					model[modeltype] = {
-					  type:modeltype,
-					  defaultValue:default
-					}
+						model[modeltype] = {
+						  type:modeltype,
+						  defaultValue:default
+						}
 				  }
 				}
 				if(titles.indexOf(title) == -1 )
@@ -61,15 +61,15 @@ module.exports = {
 			}
 
 			function  walkThrough(obj) {
-				var result = [];
+					var result = [];
 
-				for(x in obj)
-				{
-				  var schema = obj[x];
-				  var titles = []
-				  walkThroughEach(result,titles,schema,obj);
-				}
-				return result;
+					for(x in obj)
+					{
+					  var schema = obj[x];
+					  var titles = []
+					  walkThroughEach(result,titles,schema,obj);
+					}
+					return result;
 			  }
 
 
