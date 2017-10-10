@@ -6,13 +6,17 @@ var api = function(app,functions){
       //validate if post put
         next();
     });
+
+    
     app.get('/api/publish', function(req, response, next) {
 
-          functions.resetTables();
+          functions.createTables();
     });
     app.post('/api/gettoken', function(req, response, next) {
         response.send('Hello Doc');
     });
+
+
     functions.init(app);
 
 }
