@@ -11,7 +11,7 @@ module.exports = {
 	helpers:require('./helper'),
 	loadSchemasSql:function(cb,obj){
 
-			console.log(obj);
+
 			var self = this;
 			var models = [];
 			for(x in obj)
@@ -77,8 +77,9 @@ module.exports = {
 					}
 				*/
 
-				var endpoints = ['/api/'+title, '/api/'+title+'/:id',]
+				var endpoints = ['/api/'+title, '/api/'+title+'/:id',propnames]
 
+					console.log(endpoints);
 
 			}
 			cb();

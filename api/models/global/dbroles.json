@@ -3,7 +3,7 @@
     "type": "object",
     "title": "dbroles",
     "properties": {
-      "name": { "type": "string" },
+      "name": { "type": "string(255)" },
       "permissions": {
           "type":"many",
           "items": [

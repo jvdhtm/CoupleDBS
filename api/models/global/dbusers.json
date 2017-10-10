@@ -3,8 +3,8 @@
     "type": "object",
     "title": "dbusers",
     "properties": {
-      "name": { "type": "string"},
-      "user": { "type": "string", "format": "email" },
+      "name": { "type": "string('255')"},
+      "user": { "type": "email" },
       "roles": {
           "type":"one",
           "items": [
