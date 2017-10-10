@@ -100,7 +100,6 @@ module.exports = {
 				}
 
 				var endpoints = ['/api/'+title, '/api/'+title+'/:id']
-				console.log(endpoints);
 				var userResource = epilogue.resource({
 					model: result[title],
 					endpoints: endpoints
@@ -127,11 +126,15 @@ module.exports = {
 	{
 
 	},
+	updateTables: function (tableName,data,cb)
+	{
+
+	}
 	removeData:function(tableName,data,cb)
 	{
 
 	},
-	resetTables: function()
+	createTables: function()
 	{
 		var self = this;
 		var object = self.helpers.readJson('api/models/project/*.json',function(obj){

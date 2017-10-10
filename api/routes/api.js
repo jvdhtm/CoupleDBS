@@ -6,8 +6,8 @@ var api = function(app,functions){
       //validate if post put
         next();
     });
-    app.post('/api/publish', function(req, response, next) {
-        response.send('Hello Doc');
+    app.get('/api/publish', function(req, response, next) {
+
           functions.resetTables();
     });
     app.post('/api/gettoken', function(req, response, next) {
