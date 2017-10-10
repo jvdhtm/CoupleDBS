@@ -3,7 +3,8 @@
     "type": "object",
     "title": "dbpermissions",
     "properties": {
-      "path": { "type": "string"}
+      "path": { "type": "string"},
+      "action": { "type": "string"}
     }
 
 }

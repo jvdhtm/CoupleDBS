@@ -11,8 +11,9 @@ module.exports = {
 	validators:[],
 	schemas:[],
 	helpers:require('./helper'),
-	loadSchemasSql:function(obj){
+	loadSchemasSql:function(cb,obj){
 
+			console.log(obj);
 			var self = this;
 			var models = [];
 			for(x in obj)
@@ -98,27 +99,15 @@ module.exports = {
 
 				}
 
-				var endpoints = ['/'+title, '/'+title+'/:id']
+				var endpoints = ['/api/'+title, '/api/'+title+'/:id']
 				console.log(endpoints);
 				var userResource = epilogue.resource({
 					model: result[title],
 					endpoints: endpoints
 				});
 
-
-
-
 			}
-			self.DBSql.sync().then(function() {
-
-				server.listen(function() {
-				      var host = 'localhost',
-				          port = '8000'
-
-				      console.log('listening at http://%s:%s', host, port);
-				    });
-
-			});
+			cb();
 
 	},
 	loadSchemasNosql:function()
@@ -142,11 +131,28 @@ module.exports = {
 	{
 
 	},
-	initTables:function (cb,jsonSchemas)
+	resetTables: function()
 	{
 		var self = this;
-		var object = self.helpers.readJson('api/models/*.json',function(obj){
+		var object = self.helpers.readJson('api/models/project/*.json',function(obj){
 				self.loadSchemasSql(function(result){
+					self.DBSql.sync();
+				},obj);
+		});
+	},
+	initTables:function ()
+	{
+		var self = this;
+		var object = self.helpers.readJson('api/models/global/*.json',function(obj){
+				self.loadSchemasSql(function(result){
+
+					self.DBSql.sync().then(function() {
+						self.server.listen(8000,function() {
+							var host = self.server.address().address,
+	 								port = self.server.address().port;
+									console.log('listening at http://localhost:%s', port);
+								});
+					});
 
 				},obj);
 		});
@@ -154,12 +160,14 @@ module.exports = {
 	init: function(app,cb){
 
     /**/
-			var self = this;
+		var self = this;
 		 self.DBSql = new Sequelize(Dbconfig.Dbname ,Dbconfig.user, Dbconfig.password , {
 			  host: Dbconfig.host ,
 			  port: Dbconfig.port,
 				dialect: 'mysql'
 			});
+
+
 
 			epilogue.initialize({
 			  app: app,
@@ -167,7 +175,8 @@ module.exports = {
 			});
 
 			self.server = http.createServer(app);
-			self.initTables(cb,'null')
+
+			self.initTables();
 
 	}
 }
