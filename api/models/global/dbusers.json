@@ -1,9 +1,8 @@
 {
-    "number":"3",
     "type": "object",
     "title": "dbusers",
     "properties": {
-      "name": { "type": "string('255')"},
+      "name": { "type": "string"},
       "user": { "type": "email" },
       "roles": {
           "type":"one",

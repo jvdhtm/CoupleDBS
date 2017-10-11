@@ -1,9 +1,8 @@
 {
-    "number":"2",
     "type": "object",
     "title": "dbroles",
     "properties": {
-      "name": { "type": "string(255)" },
+      "name": { "type": "string" },
       "permissions": {
           "type":"many",
           "items": [

@@ -14,23 +14,16 @@ module.exports = {
 
 			var self = this;
 			var models = [];
+			var result = [];
+			var parents = [];
 			for(x in obj)
 			{
 			  var schema = obj[x];
-			  var number  =   schema.number;
-			  models[number] = schema;
-			}
-			var result = [];
-			for(var x = 1; x <  models.length ; x++ )
-			{
-
-				var schema  =  models[x];
 				var prop  =   schema.properties;
 				var title  =   schema.title;
 
 				var model = [];
-				var children = [];
-				var propnames = []
+				var propnames = [];
 				for(y in prop)
 				{
 					var eachprop = prop[y];
@@ -40,7 +33,11 @@ module.exports = {
 					if(type == 'many' || type == 'one')
 					{
 						var childModel =  eachprop.items[0].instanceof;
-						children.push(childModel);
+						parents[title] = childModel ;
+						model[y] = {
+							type:type,
+							defaultValue:valuedef
+						}
 					}
 					else {
 						propnames.push(y)
@@ -53,35 +50,59 @@ module.exports = {
 						}
 						else {
 							model[y] = {
-								type:type
+								type:type,
+								defaultValue:0
 							}
 
 						}
 					}
 				}
-
-				/*
-					result[title] = self.DBSql.define(title, model);
-					for(var z in children)
-					{
-
-						if(type == 'many')
-						{
-							result[title].hasMany(result[children[z]]);
-						}
-						if(type == 'one')
-						{
-							result[title].hasOne(result[children[z]]);
-						}
-
-					}
-				*/
-
-				var endpoints = ['/api/'+title, '/api/'+title+'/:id',propnames]
-
-					console.log(endpoints);
-
+				models[title] = model;
 			}
+
+			knex.schema.hasTable(title).then(function(exists) {
+				if (!exists) {
+					return knex.schema.createTable(title, function(table) {
+						table.increments('id').primary();
+						for(var y  in model)
+						{
+								var type = model[y].type;
+								var value = model[y].defaultValue;
+								if(type == 'string')
+								{
+										table.string(y, 255).defaultTo(value);
+								}
+								if(type == 'text')
+								{
+										table.text(y).defaultValue;;
+								}
+								if(type == 'int')
+								{
+										table.integer(y).defaultValue;;
+								}
+								if(type == 'Bigint')
+								{
+										table.bigInteger(y).defaultValue;;
+								}
+								if(type == 'float')
+								{
+										table.bigInteger(y).defaultValue;;
+								}
+								if(type == 'boolean')
+								{
+										table.boolean(y).defaultValue;;
+								}
+						}
+						table.timestamps();
+					});
+				}
+			});
+
+			var endpoints = ['/api/'+title, '/api/'+title+'/:id',propnames]
+
+			console.log(endpoints);
+
+
 			cb();
 
 	},
