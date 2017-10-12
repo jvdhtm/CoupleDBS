@@ -80,6 +80,45 @@ module.exports = {
 			}
 
 
+			function mark(marked)
+			{
+				var found = 0;
+				for(var y in model)
+				{
+					 var type = model[y].type;
+					 if(type == 'string')
+					 {
+						 type = 'varchar(255)';
+					 }
+					 if(type == 'text')
+					 {
+						 type= 'text';
+					 }
+					 if(type == 'int')
+					 {
+						 type = 'int(11)';
+					 }
+					 if(type == 'Bigint')
+					 {
+							type = 'bigint(20)';
+					 }
+					 if(type == 'float')
+					 {
+						 type = 'float(8,2)';
+					 }
+					 if(type == 'boolean')
+					 {
+						 type = 'tinyint(1)';
+					 }
+					if(y == name)
+					{
+						if(datatType  == type)
+						{
+							console.log(name);
+						}
+					}
+				}
+			}
 			console.log('parents');
 
 			var createTable = function (index){
@@ -119,7 +158,7 @@ module.exports = {
 									 }
 									 if(type == 'float')
 									 {
-											 table.bigInteger(y).defaultTo(value);;
+											 table.float(y).defaultTo(value);;
 									 }
 									 if(type == 'boolean')
 									 {
@@ -151,10 +190,10 @@ module.exports = {
 						self.DBSql.schema.raw(statement).then(function(resp) {
 
 							var myresult=JSON.stringify(resp);
-							console.log('>> string: ', myresult );
+
 							var json =  JSON.parse(myresult);
 							var cols = json[0];
-
+							//console.log('>> string: ', cols );
 							var mark = [];
 
 							for(var x in cols)
@@ -165,49 +204,15 @@ module.exports = {
 									var defaultValue =  cols[x].COLUMN_DEFAULT;
 									var datatType =  cols[x].DATA_TYPE;
 									var type =  cols[x].COLUMN_TYPE;
-
 								 if(key == 'MUL')
 								 {
 
-									 var found = 0;
-									 for(var y in model)
-									 {
-										 	if var type = model[y].type;
-											if(type == 'string')
-											{
-												type= 'string(255)';
-											}
-											if(type == 'text')
-											{
-												type= 'string(255)';
-											}
-											if(type == 'int')
-											{
-
-											}
-											if(type == 'Bigint')
-											{
-
-											}
-											if(type == 'float')
-											{
-
-											}
-											if(type == 'boolean')
-											{
-
-											}
-
-
-
-
-										 if(y == name)
-										 {
-
-
-										 }
+									 }
+									 else {
 
 									 }
+
+
 									 //forgienkey
 								 }
 								 else {
