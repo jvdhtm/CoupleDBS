@@ -80,6 +80,7 @@ module.exports = {
 			}
 
 
+			console.log('parents');
 
 			var createTable = function (index){
 
@@ -93,8 +94,8 @@ module.exports = {
 					console.log('Check Table > '+title + ' index' +index);
 					self.DBSql.schema.hasTable(title).then(function(exists) {
 						if (!exists) {
-							console.log('init Table > '+title);
-							var query = self.DBSql.schema.createTable(title, function(table) {
+							console.log('create Table > '+title);
+							self.DBSql.schema.createTable(title, function(table) {
 							 table.increments('id').primary();
 							 for(var y  in model)
 							 {
@@ -124,25 +125,107 @@ module.exports = {
 									 {
 											 table.boolean(y).defaultTo(value);;
 									 }
-									 if(parents[title])
-									 {
-										 for(var z in parents[title])
-										 {
-											 var children = parents[title][z];
-											 table.foreign(children+'_id').references(children+'.id');
-										 }
-									 }
+							}
+							 if(parents[title])
+							 {
+								 console.log(parents[title]);
+								 for(var z in parents[title])
+								 {
+									 var children = parents[title][z];
+									 table.integer(children+'_id').unsigned().references('id').inTable(children);
+								 }
 							 }
+
 							 table.timestamps();
-						 }).toString();
+						 }).then(function(resp) {
 
-						 console.log(query);
-						 index--;
-						 return createTable(index);
-
+							 index--;
+							 return createTable(index);
+						 });
 					 }else {
-
 						console.log('alter Table > '+title);
+
+  				var statement = "SELECT COLUMN_NAME,EXTRA,IS_NULLABLE,COLUMN_KEY,COLUMN_DEFAULT,DATA_TYPE,COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '"+Dbconfig.Dbname+"' AND TABLE_NAME = '"+title+"'";
+
+					console.log(statement);
+						self.DBSql.schema.raw(statement).then(function(resp) {
+
+							var myresult=JSON.stringify(resp);
+							console.log('>> string: ', myresult );
+							var json =  JSON.parse(myresult);
+							var cols = json[0];
+
+							var mark = [];
+
+							for(var x in cols)
+							{
+									var name =  cols[x].COLUMN_NAME;
+									var key =  cols[x].COLUMN_KEY;
+									var nullable =  cols[x].IS_NULLABLE;
+									var defaultValue =  cols[x].COLUMN_DEFAULT;
+									var datatType =  cols[x].DATA_TYPE;
+									var type =  cols[x].COLUMN_TYPE;
+
+								 if(key == 'MUL')
+								 {
+
+									 var found = 0;
+									 for(var y in model)
+									 {
+										 	if var type = model[y].type;
+											if(type == 'string')
+											{
+												type= 'string(255)';
+											}
+											if(type == 'text')
+											{
+												type= 'string(255)';
+											}
+											if(type == 'int')
+											{
+
+											}
+											if(type == 'Bigint')
+											{
+
+											}
+											if(type == 'float')
+											{
+
+											}
+											if(type == 'boolean')
+											{
+
+											}
+
+
+
+
+										 if(y == name)
+										 {
+
+
+										 }
+
+									 }
+									 //forgienkey
+								 }
+								 else {
+
+								 }
+
+
+							}
+
+
+
+						 });
+
+						var query = self.DBSql.schema.alterTable(title, function(t) {
+
+						}).toString();
+
+						console.log(query)
 						index--;
 						return createTable(index);
 					 }
@@ -156,7 +239,7 @@ module.exports = {
 
 			}
 
-			console.log(models);
+
 			createTable(level);
 			var endpoints = ['/api/'+title, '/api/'+title+'/:id',propnames];
 			cb();
@@ -202,8 +285,6 @@ module.exports = {
 			var self = this;
 			var object = self.helpers.readJson('api/models/global/*.json',function(obj){
 					self.loadSchemasSql(function(result){
-
-
 					},obj);
 			});
 
