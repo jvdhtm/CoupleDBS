@@ -3,11 +3,6 @@
     "title": "dbpermissions",
     "properties": {
       "path": { "type": "string"},
-      "code": { "type": "int"},
-      "code1": { "type": "Bigint"},
-      "code2": { "type": "float"},
-      "code3": { "type": "boolean"},
-      "code4": { "type": "text"},
       "action": { "type": "string"}
     }
 
