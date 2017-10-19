@@ -174,7 +174,6 @@ module.exports = {
 			}
 		}
 		createTable(models.length - 1, cb);
-		/**/
 	},
 	loadSchemasNosql: function() {
 		var self = this;

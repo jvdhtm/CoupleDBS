@@ -3,9 +3,16 @@ module.exports = function letsRoute(app,endpoints,db)
 
 
 
-  app.post('/:project/get-token', function (req, res) {
+  app.get('/:project/get-token', function (req, res) {
+
+    // get usr and pass
+    // send back random token 
+    // save token inside session
+
     res.send('get request to the API');
   });
+
+
 
   app.use('/api/:project/*', function(req ,res ,next ){
     console.log('Time:', Date.now);
