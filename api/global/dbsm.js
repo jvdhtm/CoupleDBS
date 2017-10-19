@@ -1,7 +1,7 @@
 
 var Dbconfig = require('./db.config');
 var http = require('http');
-
+var crypto = require('crypto');
 module.exports = {
 	DBSql:'',
   DBNoSql:'',
@@ -9,81 +9,135 @@ module.exports = {
 	validators:[],
 	endpoints:[],
 	helpers:require('./helper'),
-	loadSchemasSql:function(cb,obj){
-			var self = this;
-			var models = [];
-			var result = [];
-			var parents = [];
-			var tplgy = [];
-			var level = 0;
-			for(x in obj)
+	getChildren: function (schema)
+	{
+		var self = this;
+		var children = [];
+		var prop  =   schema.properties;
+		var title  =   schema.title;
+		for(y in prop)
+		{
+			var type = prop[y].dbtype;
+			var valuedef = prop[y].default;
+			if(type == 'many' || type == 'one')
 			{
-			  var schema = obj[x];
-				var prop  =   schema.properties;
-				var title  =   schema.title;
-				tplgy[title] = level;
-				var model = [];
-				var propnames = [];
-				for(y in prop)
+				var childModel =  prop[y].items[0].instanceof;
+				children.push(childModel)
+			}
+		}
+		return children;
+	},
+	mapTreetoArray: function(models)
+	{
+		var self = this;
+
+
+    var obj = []
+		for(x in models)
+		{
+			var schema = models[x];
+			var title  =   schema.title;
+			obj [title] = schema;
+		}
+
+		var visted = [];
+		var parentvisted = [];
+		var resultarray = [];
+		var level = 0;
+
+		for(x in obj)
+		{
+			var schema = obj[x];
+			var prop  =   schema.properties;
+			var title  =   schema.title;
+			if(visted[title] == 1){
+				continue;
+			}
+			var stack = [];
+			stack.push(title);
+			while(stack.length !== 0)
+			{
+				var node =  stack.pop();
+				var children = self.getChildren(obj[node]);
+				console.log(children);
+				if(children.length == 0 || parentvisted[node] == 1)
 				{
-					var eachprop = prop[y];
-					var type = prop[y].type;
-					var valuedef = prop[y].default;
-					if(type == 'many' || type == 'one')
+						resultarray [level] = obj[node];
+						visted[node] = 1;
+						level++;
+				} else {
+					parentvisted[node] = 1;
+					stack.push(node);
+					for (var c in children)
 					{
-						var childModel =  eachprop.items[0].instanceof;
-						if(typeof parents[childModel]  == 'undefined')
-						{
-								parents[childModel] = [];
-								parents[childModel][title] =  title;
-								level++;
+						if(visted[children[c]] == 1){
+							continue;
 						}
-						else {
-							parents[childModel][title] =  title;
+						stack.push(children[c]);
+					}
+				}
+			}
+		}
+
+		var parents = [];
+		var result = [];
+		for (i = 0; i < resultarray.length; i++)
+		{
+			var schema = resultarray[i];
+			var prop  =   schema.properties;
+			var title  =   schema.title;
+			var propnames = [];
+			var model = [];
+			for(y in prop)
+			{
+			  var eachprop = prop[y];
+			  var type = prop[y].dbtype;
+			  var valuedef = prop[y].default;
+				if(type != 'many' && type != 'one'){
+
+					propnames.push(y)
+					if(valuedef)
+					{
+						model[y] = {
+							type:type,
+							defaultValue:valuedef
 						}
 					}
 					else {
-						propnames.push(y)
-						if(valuedef)
-						{
-							model[y] = {
-								type:type,
-								defaultValue:valuedef
-							}
+						model[y] = {
+							type:type,
+							defaultValue:0
 						}
-						else {
-							model[y] = {
-								type:type,
-								defaultValue:0
-							}
 
-						}
 					}
 				}
-				if(typeof models[tplgy[title]] !=='undefined')
-				{
-					 	var count = tplgy[title];
-						while(typeof models[count] !=='undefined')
-						{
-							count++;
-							console.log('finding >'+ count + 'title '+title  );
-
-						}
-						models[count] = {title:title,model:model};
-				}
 				else {
-					models[tplgy[title]] = {title:title,model:model};
+						var childModel =  eachprop.items[0].instanceof;
+						parents[childModel] = [];
+					  parents[childModel][title] =  title;
 				}
-				var endpoints = ['/api/'+title, '/api/'+title+'/:id',propnames];
-				self.endpoints.push(endpoints);
 			}
-			var createTable = function (index){
 
+		  result[i] = {title:title,model:model};
+			var endpoints = ['/api/'+title, '/api/'+title+'/:id',propnames];
+			self.endpoints.push(endpoints);
+		}
+		return {models:result,parents:parents};
+
+	},
+	loadSchemasSql:function(cb,obj){
+			var self = this;
+			var result = self.mapTreetoArray(obj);
+
+			var models = result.models;
+			var parents = result.parents;
+
+			var createTable = function (index,callback){
 				if(models[index])
 				{
 					var model = models[index].model;
 					var title = models[index].title;
-					console.log('Check Table > '+title + ' index' +index);
+					console.log('Check Table > '+title + ' index >' +index);
 					self.DBSql.schema.hasTable(title).then(function(exists) {
 						if (!exists) {
 							console.log('create Table > '+title);
@@ -133,27 +187,29 @@ module.exports = {
 									 table.integer(children+'_id').unsigned().references('id').inTable(children);
 								 }
 							 }
-							 table.timestamps();
+							 table.timestamp('created_at').notNullable().defaultTo(self.DBSql.raw('now()'));
+ 						 	 table.timestamp('updated_at');
 						 }).then(function(resp) {
 							 index--;
-							 return createTable(index);
+							 return createTable(index,callback);
 						 });
 					 } else {
 						 console.log('Table existed > '+title);
 						index--;
-						return createTable(index);
+						return createTable(index,callback);
 					 }
-
 					});
 
 				}
 				else {
+					callback();
 					return;
 				}
 
 			}
-			createTable(level);
-			cb();
+			createTable(models.length-1,cb);
+			/**/
+
 	},
 	loadSchemasNosql:function()
 	{
@@ -195,7 +251,28 @@ module.exports = {
 
 			var self = this;
 			var object = self.helpers.readJson('api/models/global/*.json',function(obj){
-					self.loadSchemasSql(function(result){
+					self.loadSchemasSql(function(){
+
+						/*inser the first users with roles and permissions*/
+
+
+								  var role =  {name: 'Marduk', info: '[{"desc":"Marduk sees everything"}]' };
+									self.DBSql.insert(role).returning('id').into('dbroles').then(function (id) {
+
+
+										var pass = crypto.createHash('md5').update('@eyes@eyes@eyes').digest("hex");
+										var user =  {name: 'Marduk', user: 'Marduk',key : pass, info: '[{"desc":"Marduk sees everything"}]' , dbroles_id:id[0]};
+										self.DBSql.insert(user).returning('id').into('dbusers').then(function(){});
+
+
+
+										var permissions =  {path: 'heavens', action:'Dance', info: '[{"desc":"Marduk sees everything"}]', dbroles_id:id[0] };
+										self.DBSql.insert(permissions).returning('id').into('dbpermissions').then(function(){});
+
+									});
+
+
+
 					},obj);
 			});
 

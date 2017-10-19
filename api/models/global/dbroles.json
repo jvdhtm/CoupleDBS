@@ -2,14 +2,33 @@
     "type": "object",
     "title": "dbroles",
     "properties": {
-      "name": { "type": "string" },
-      "info": { "type": "json" },
+      "name": { "type": "string" ,
+                "dbtype":"string"
+              },
+      "info": { "type": "array",
+                "dbtype":"json",
+                "items": [
+                    {
+                      "type": "object",
+                      "properties": {
+                      "desc":
+                        {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+              },
       "permissions": {
-          "type":"many",
-          "items": [
-            { "instanceof":"dbpermissions"}
-          ]
-        }
+          "type": "array",
+          "dbtype":"many",
+          "items": [{ "instanceof":"dbpermissions"}]
+        },
+        "users": {
+            "type":"array",
+            "dbtype":"many",
+            "items":[{ "instanceof":"dbusers"}]
+          }
     }
 
 }

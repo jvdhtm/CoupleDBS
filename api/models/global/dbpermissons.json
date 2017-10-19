@@ -2,9 +2,23 @@
     "type": "object",
     "title": "dbpermissions",
     "properties": {
-      "path": { "type": "string"},
-      "info": { "type": "json" },
-      "action": { "type": "string"}
+      "path": { "type": "string" , "dbtype":"string" },
+      "action": { "type": "string" , "dbtype":"string"},
+      "info": { "type": "array",
+                "dbtype":"json",
+                "items": [
+                    {
+                      "type": "object",
+                      "properties": {
+                      "desc":
+                        {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+              }
+
     }
 
 }

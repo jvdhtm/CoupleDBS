@@ -2,15 +2,24 @@
     "type": "object",
     "title": "dbusers",
     "properties": {
-      "name": { "type": "string"},
-      "user": { "type": "email" },
-      "info": { "type": "json" },
-      "roles": {
-          "type":"one",
-          "items": [
-            { "instanceof":"dbroles"}
-          ]
-        }
+      "name": { "type": "string", "dbtype":"string" },
+      "user": { "type": "string" , "dbtype":"string"},
+      "key": { "type": "string" , "dbtype":"string"},
+      "info": { "type": "array",
+                "dbtype":"json",
+                "items": [
+                    {
+                      "type": "object",
+                      "properties": {
+                      "desc":
+                        {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+              }
+
     }
 
 }
