@@ -3,6 +3,7 @@
     "title": "dbpermissions",
     "properties": {
       "path": { "type": "string"},
+      "info": { "type": "json" },
       "action": { "type": "string"}
     }
 

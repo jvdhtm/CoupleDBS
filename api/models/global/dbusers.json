@@ -4,6 +4,7 @@
     "properties": {
       "name": { "type": "string"},
       "user": { "type": "email" },
+      "info": { "type": "json" },
       "roles": {
           "type":"one",
           "items": [

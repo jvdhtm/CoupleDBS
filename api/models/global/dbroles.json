@@ -3,6 +3,7 @@
     "title": "dbroles",
     "properties": {
       "name": { "type": "string" },
+      "info": { "type": "json" },
       "permissions": {
           "type":"many",
           "items": [

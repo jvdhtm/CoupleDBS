@@ -117,6 +117,10 @@ module.exports = {
 								 {
 										 table.boolean(y).defaultTo(value);;
 								 }
+								 if(type == 'json')
+								 {
+										 table.json(y).defaultTo(value);;
+								 }
 								 if(type == 'datetime'){
 									table.timestamp(y).defaultTo(value)
 								 }
