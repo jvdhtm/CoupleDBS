@@ -10,7 +10,9 @@ app.use(session({
   },
   secret: sessionConfig.secret,
   cookie: { maxAge: sessionConfig.maxAge }
-}))
+}));
+
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
