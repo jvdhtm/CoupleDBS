@@ -16,10 +16,39 @@ app.use('*',function(req ,res ,next){
   app.post('/session/:project/get-token', function (req, res, next) {
     var projectname = req.params.project;
 
+    var usernameReq = req.body.username;
+    var passwordReq = req.body.password;
 
+
+
+    db('users')
+      .where({ user: usernameReq })
+      .select('key')
+      .then(function(result) {
+        if (!result || !result[0])  {  // not found!
+          // report invalid username
+
+
+          return;
+        }
+        var pass = result[0].password;
+        if (passwordReq === pass) {
+
+            res.send('get request to the API');
+
+
+          // login
+        } else {
+          // failed login
+        }
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
     // get usr and pass
-    // send back random token
-    // save token inside session
+    // send back random token based on IP and username an time  72hour
+    // save token inside db if there is user
+
     res.send('get request to the API');
 
   });

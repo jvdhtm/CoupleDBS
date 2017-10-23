@@ -5,6 +5,7 @@
       "name": { "type": "string", "dbtype":"string" },
       "user": { "type": "string" , "dbtype":"string"},
       "key": { "type": "string" , "dbtype":"string"},
+      "session":  { "type": "string" , "dbtype":"string" },
       "info": { "type": "array",
                 "dbtype":"json",
                 "items": [
