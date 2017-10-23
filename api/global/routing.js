@@ -19,7 +19,7 @@ app.use('*',function(req ,res ,next){
     var usernameReq = req.body.username;
     var passwordReq = req.body.password;
 
-
+    // user + pass + year
 
     db('users')
       .where({ user: usernameReq })
