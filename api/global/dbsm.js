@@ -118,15 +118,16 @@ module.exports = {
           return;
         }
         var pass = result[0].key;
+				var id = result[0].id;
 				var passwordReqMD5 = crypto.createHash('md5').update(password).digest("hex");
         if (passwordReqMD5 === pass) {
-  				var id = result[0].id;
 					var d1 =  new Date();
 					var twoWeeks =  1000 * 60 * 60 * 24 * 14;
 					var twoWeeksAhead = new Date(d1.getTime()+twoWeeks);
 					var session = id + twoWeeksAhead + password;
 					var token =  crypto.createHash('md5').update(session).digest("hex");
-        	cb({ msg: 401 , token:token});
+        	cb({ msg: 202 , token:token});
+					self.DBSql('dbusers').update('session',token).where({ id: id }).then(function(result) {});
         } else {
 					err({ msg: 401 , err:'password'});
         }
@@ -142,9 +143,13 @@ module.exports = {
         }
         var Sid = result[0].session;
 				var updated_at = result[0].updated_at;
+				var id = result[0].id;
 				if(Sid)
 				{
 	        if (session === Sid) {
+
+
+
 	        	cb();
 	        } else {
 							var d2 = new Date();

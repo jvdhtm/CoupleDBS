@@ -14,7 +14,6 @@ module.exports = function(app,dbs)
   app.post('/session/get-token', function (req, res, next) {
     var usernameReq = req.body.username;
     var passwordReq = req.body.password;
-    console.log(req.body);
     dbs.checkLogin(usernameReq,passwordReq,function(token){
         res.send(token);
     },function(err){
@@ -25,7 +24,18 @@ module.exports = function(app,dbs)
 
   app.use('/api/*', function(req ,res ,next ){
     console.log('Time:', Date.now);
-    next();
+    var username = req.body.username;
+    var token = req.body.token;
+    dbs.checkLogin(usernameReq,passwordReq,function(token){
+
+        next();
+
+    },function(err){
+        res.send(err);
+    });
+
+
+
   })
   app.get('/api/*', function (req, res) {
     res.send('get request to the API');
