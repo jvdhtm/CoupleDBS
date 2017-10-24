@@ -26,16 +26,11 @@ module.exports = function(app,dbs)
     console.log('Time:', Date.now);
     var username = req.body.username;
     var token = req.body.token;
-    dbs.checkLogin(usernameReq,passwordReq,function(token){
-
+    dbs.checkSession(usernameReq,passwordReq,function(token){
         next();
-
     },function(err){
         res.send(err);
     });
-
-
-
   })
   app.get('/api/*', function (req, res) {
     res.send('get request to the API');
