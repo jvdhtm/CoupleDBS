@@ -107,7 +107,62 @@ module.exports = {
 			parents: parents
 		};
 	},
-	loadSchemasSql: function(cb, obj) {
+	checkLogin:function(username,password,cb,err){
+		db('dbusers').where({ user: username }).select('key','id').then(function(result) {
+        if (!result || !result[0])  {
+					err({ msg: 401, err:'username'});
+          return;
+        }
+        var pass = result[0].key;
+				var passwordReqMD5 = crypto.createHash('md5').update(passwordReq).digest("hex");
+        if (passwordReq === pass) {
+  				var id = result[0].id;
+					var d1 =  new Date();
+					var twoWeeksAhead = new Date(d1.getTime()+twoWeeks);
+					var session = id + twoWeeksAhead + passwordReq;
+					var token =  crypto.createHash('md5').update(session).digest("hex");
+        	cb(token);
+        } else {
+					err({ msg: 401 , err:'password'});
+        }
+      })
+      .catch(function(error) {
+        	err({ msg: 503 , err:'connection'});
+      });
+	},
+	checkSession:function(session,username,cb){
+
+		db('dbusers').where({ user: username }).select('*').then(function(result) {
+        if (!result || !result[0])  {
+					err({ msg: 401, err:'username'});
+          return;
+        }
+        var Sid = result[0].session;
+				var updated_at = result[0].updated_at;
+				if(Sid)
+				{
+	        if (session === Sid) {
+	        	cb();
+	        } else {
+							var d2 = new Date();
+							var twoWeeks =  1000 * 60 * 60 * 24 * 14;
+							var d1 =  new Date(updated_at);
+							var twoWeeksAhead = new Date(d1.getTime()+twoWeeks);
+							if(twoWeeksAhead < d2)
+							{
+								err({ msg: 403 , err:'token'});
+							}
+							else {
+								err({ msg: 440 , err:'token'});
+							}
+	        }
+				}
+				else {
+					err({ msg: 440 , err:'token'});
+				}
+      });
+	},
+	loadSchemasSql: function(obj,cb) {
 		var self = this;
 		var result = self.mapTreetoArray(obj);
 		var models = result.models;
@@ -175,7 +230,7 @@ module.exports = {
 		}
 		createTable(models.length - 1, cb);
 	},
-	loadSchemasNosql: function() {
+	loadSchemasNosql: function(obj, cb) {
 		var self = this;
 	},
 	validate: function(tableName, data, cb) {},
@@ -188,7 +243,7 @@ module.exports = {
 	init: function(app, cb) {
 		var self = this;
 		var object = self.helpers.readJson('api/models/global/*.json', function(obj) {
-			self.loadSchemasSql(function() {
+			self.loadSchemasSql(obj,function() {
 				/*inser the first users with roles and permissions*/
 				var role = {
 					name: 'Marduk',
@@ -212,7 +267,7 @@ module.exports = {
 					};
 					self.DBSql.insert(permissions).returning('id').into('dbpermissions').then(function() {});
 				});
-			}, obj);
+			});
 		});
 		self.DBSql = require('knex')({
 			client: Dbconfig.dialect,
