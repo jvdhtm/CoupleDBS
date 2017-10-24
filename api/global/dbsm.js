@@ -76,16 +76,19 @@ module.exports = {
 				var eachprop = prop[y];
 				var type = prop[y].dbtype;
 				var valuedef = prop[y].default;
+				var unique = prop[y].unique;
 				if (type != 'many' && type != 'one') {
 					propnames.push(y)
 					if (valuedef) {
 						model[y] = {
 							type: type,
+							unique:unique,
 							defaultValue: valuedef
 						}
 					} else {
 						model[y] = {
 							type: type,
+							unique:unique,
 							defaultValue: 0
 						}
 					}
@@ -108,27 +111,27 @@ module.exports = {
 		};
 	},
 	checkLogin:function(username,password,cb,err){
-		db('dbusers').where({ user: username }).select('key','id').then(function(result) {
+		var self = this;
+		var query = self.DBSql('dbusers').where({ user: username }).select('key','id').then(function(result) {
         if (!result || !result[0])  {
 					err({ msg: 401, err:'username'});
           return;
         }
         var pass = result[0].key;
-				var passwordReqMD5 = crypto.createHash('md5').update(passwordReq).digest("hex");
-        if (passwordReq === pass) {
+				var passwordReqMD5 = crypto.createHash('md5').update(password).digest("hex");
+        if (passwordReqMD5 === pass) {
   				var id = result[0].id;
 					var d1 =  new Date();
+					var twoWeeks =  1000 * 60 * 60 * 24 * 14;
 					var twoWeeksAhead = new Date(d1.getTime()+twoWeeks);
-					var session = id + twoWeeksAhead + passwordReq;
+					var session = id + twoWeeksAhead + password;
 					var token =  crypto.createHash('md5').update(session).digest("hex");
-        	cb(token);
+        	cb({ msg: 401 , token:token});
         } else {
 					err({ msg: 401 , err:'password'});
         }
-      })
-      .catch(function(error) {
-        	err({ msg: 503 , err:'connection'});
       });
+
 	},
 	checkSession:function(session,username,cb){
 
@@ -177,9 +180,12 @@ module.exports = {
 						console.log('create Table > ' + title);
 						self.DBSql.schema.createTable(title, function(table) {
 							table.increments('id').primary();
+
+							var uniques = [];
 							for (var y in model) {
 								var type = model[y].type;
 								var value = model[y].defaultValue;
+								var unique = model[y].unique;
 								if (type == 'string') {
 									table.string(y, 255).defaultTo(value);
 								}
@@ -190,7 +196,7 @@ module.exports = {
 									table.integer(y).defaultTo(value);;
 								}
 								if (type == 'Bigint') {
-									table.bigInteger(y).defaultTo(value);;
+									table.bigInteger(y).defaultTo(value);
 								}
 								if (type == 'float') {
 									table.float(y).defaultTo(value);;
@@ -204,7 +210,16 @@ module.exports = {
 								if (type == 'datetime') {
 									table.timestamp(y).defaultTo(value)
 								}
+								if(unique == 1)
+								{
+										uniques.push(y)
+								}
 							}
+							if(uniques.length > 0)
+							{
+								table.unique(uniques);
+							}
+
 							if (parents[title]) {
 								for (var z in parents[title]) {
 									var children = parents[title][z];
@@ -249,6 +264,7 @@ module.exports = {
 					name: 'Marduk',
 					info: '[{"desc":"Marduk sees everything"}]'
 				};
+				cb();
 				self.DBSql.insert(role).returning('id').into('dbroles').then(function(id) {
 					var pass = crypto.createHash('md5').update('@eyes@eyes@eyes').digest("hex");
 					var user = {
@@ -265,7 +281,9 @@ module.exports = {
 						info: '[{"desc":"Marduk sees everything"}]',
 						dbroles_id: id[0]
 					};
-					self.DBSql.insert(permissions).returning('id').into('dbpermissions').then(function() {});
+					self.DBSql.insert(permissions).returning('id').into('dbpermissions').then(function() {
+
+					});
 				});
 			});
 		});

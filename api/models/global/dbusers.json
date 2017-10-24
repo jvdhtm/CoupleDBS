@@ -3,7 +3,7 @@
     "title": "dbusers",
     "properties": {
       "name": { "type": "string", "dbtype":"string" },
-      "user": { "type": "string" , "dbtype":"string"},
+      "user": { "type": "string" , "dbtype":"string", "unique":"1"},
       "key": { "type": "string" , "dbtype":"string"},
       "session":  { "type": "string" , "dbtype":"string" },
       "info": { "type": "array",

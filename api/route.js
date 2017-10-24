@@ -1,8 +1,14 @@
-var functions = require('./global/dbsm.js');
-var APIDB = require('./routes/api.js');
+var APIDB = require('./global/dbsm.js');
+var routes = require('./global/routing.js');
 
 var routers = function (app)
 {
-	APIDB(app,functions);
+	APIDB.init(app,function(){
+
+		routes(app,APIDB);
+
+	});
+
+
 }
 module.exports = routers;

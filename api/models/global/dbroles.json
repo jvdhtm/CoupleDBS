@@ -3,7 +3,8 @@
     "title": "dbroles",
     "properties": {
       "name": { "type": "string" ,
-                "dbtype":"string"
+                "dbtype":"string",
+                "unique":"1"
               },
       "info": { "type": "array",
                 "dbtype":"json",
@@ -30,5 +31,4 @@
             "items":[{ "instanceof":"dbusers"}]
           }
     }
-
 }

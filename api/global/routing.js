@@ -1,40 +1,30 @@
-module.exports = function letsRoute(app,endpoints,db)
+module.exports = function(app,dbs)
 {
 
+  app.use('*',function(req ,res ,next){
 
-
-app.use('*',function(req ,res ,next){
-
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  next();
-})
-
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+  });
 
 
   app.post('/session/get-token', function (req, res, next) {
-
-    
     var usernameReq = req.body.username;
     var passwordReq = req.body.password;
-    db.checkLogin(username,password,function(token){
-
-        res.send('get request to the API');
-
+    console.log(req.body);
+    dbs.checkLogin(usernameReq,passwordReq,function(token){
+        res.send(token);
     },function(err){
-
-        res.send('get request to the API');
-
+        res.send(err);
     });
   });
 
 
-
   app.use('/api/*', function(req ,res ,next ){
     console.log('Time:', Date.now);
-
     next();
   })
   app.get('/api/*', function (req, res) {
@@ -53,6 +43,10 @@ app.use('*',function(req ,res ,next){
 
   app.put('/api/*', function (req, res) {
     res.send('put request to the API')
+  });
+
+  app.listen(3000, function(){
+    console.log('listening on port 3000');
   });
 
 }
