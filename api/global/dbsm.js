@@ -127,46 +127,72 @@ module.exports = {
 					var session = id + twoWeeksAhead + password;
 					var token =  crypto.createHash('md5').update(session).digest("hex");
         	cb({ msg: 202 , token:token});
-					self.DBSql('dbusers').update('session',token).where({ id: id }).then(function(result) {});
+					self.DBSql('dbusers').update('session', token ).update('updated_at', 'NOW()').where({ id: id }).then(function(result) {});
         } else {
 					err({ msg: 401 , err:'password'});
         }
       });
 
 	},
-	checkSession:function(session,username,cb){
+	checkSession:function(session,username,path,action,cb,err){
 
-		db('dbusers').where({ user: username }).select('*').then(function(result) {
-        if (!result || !result[0])  {
-					err({ msg: 401, err:'username'});
-          return;
-        }
-        var Sid = result[0].session;
-				var updated_at = result[0].updated_at;
-				var id = result[0].id;
-				if(Sid)
-				{
-	        if (session === Sid) {
+		var self = this;
 
 
+		var query = self.DBSql('dbusers').where({ user: username }).select('session',self.DBSql.raw('dbusers.id as id'),'path','action',self.DBSql.raw('dbusers.id as id'))
+		.innerJoin('dbroles', 'dbusers.dbroles_id', '=', 'dbroles.id')
+		.innerJoin('dbpermissions', 'dbpermissions.dbroles_id', '=', 'dbroles.id').then(function(result) {
 
-	        	cb();
-	        } else {
-							var d2 = new Date();
-							var twoWeeks =  1000 * 60 * 60 * 24 * 14;
-							var d1 =  new Date(updated_at);
-							var twoWeeksAhead = new Date(d1.getTime()+twoWeeks);
-							if(twoWeeksAhead < d2)
+			if (!result || !result[0])  {
+				err({ msg: 401, err:'username'});
+				return;
+			}
+			var Sid = result[0].session;
+			var updated_at = result[0].updated_at;
+			var id = result[0].id;
+			if(Sid){
+					if (session === Sid) {
+						for(var x in result){
+
+							if(result[x].path == 'heavens' || result[x].path == path)
 							{
-								err({ msg: 403 , err:'token'});
+									if(result[x].action == action || result[x].action =='Dance')
+									{
+										cb();
+										break;
+									}
+									else {
+										err({ msg: 401 , err: action + 'is not allowed'});
+										break;
+									}
+
 							}
 							else {
-								err({ msg: 440 , err:'token'});
+
+								err({ msg: 401 , err:'path is not allowed'});
+								break;
 							}
-	        }
+
+						}
+						return;
+					}
+					else {
+						var d2 = new Date();
+						var twoWeeks =  1000 * 60 * 60 * 24 * 14;
+						var d1 =  new Date(updated_at);
+						var twoWeeksAhead = new Date(d1.getTime()+twoWeeks);
+						if(twoWeeksAhead < d2){
+							err({ msg: 401 , err:'not allowed'});
+						} else {
+							err({ msg: 440 , err:'expired'});
+						}
+
+					}
+
 				}
 				else {
-					err({ msg: 440 , err:'token'});
+					err({ msg: 401 , err:'no session'});
+					return;
 				}
       });
 	},
