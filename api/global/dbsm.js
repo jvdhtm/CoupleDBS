@@ -49,7 +49,6 @@ module.exports = {
 			while (stack.length !== 0) {
 				var node = stack.pop();
 				var children = self.getChildren(obj[node]);
-				console.log(children);
 				if (children.length == 0 || parentvisted[node] == 1) {
 					resultarray[level] = obj[node];
 					visted[node] = 1;
@@ -316,17 +315,19 @@ module.exports = {
 		var self = this;
 		var encObj = {};
 
+
 		for(var x in obj)
 		{
 			var y = self.encrypt(x);
 			var each =  obj[x];
 			var flag = 0;
-			try{
-				var json = JSON.parse(each);
-				flag = 1;
+
+			for (var o in each) {
+					if (typeof obj[o] == "object") {
+							flag = 1;
+							break;
+					}
 			}
-			catch(e)
-			{}
 
 			if(flag == 1)
 			{
@@ -341,7 +342,14 @@ module.exports = {
 			}
 			else {
 
-					encObj[y] = self.encrypt(each);
+					if(x.indexOf('_id') > -1)
+					{
+						encObj[y] =  obj[x];
+					}
+					else {
+						encObj[y] = self.encrypt(each);
+					}
+
 			}
 
 		}
@@ -352,21 +360,29 @@ module.exports = {
 		var self = this;
 	},
 	validate: function(tableName, data, cb) {},
-	insertData: function(tableName, data, cb) {
-
-		console.log(tableName);
-		console.log(data);
-
+	insertData: function(tableName, data, cb,err) {
 
 		var self = this;
 		var encdata = self.encryptObj(data);
 		var encid = self.encrypt('id');
 		var enctable =  self.encrypt(tableName);
-
 		self.DBSql.insert(encdata).returning(encid).into(enctable).then(function(id) {
-			var id =  self.decrypt(id[0]);
-			console.log(id)
+			console.log()
+			var id =  id[0];
 				cb(id);
+		}).catch(function(error) {
+				if(err)
+				{
+					err();
+				}
+ 				if(cb)
+				{
+					self.DBSql(enctable).select(encid).orderBy(encid, 'desc').limit(1).then(function(result) {
+						var id = result[0][encid];
+						console.log(id);
+						cb(id);
+					});
+				}
 		});
 
 
@@ -383,34 +399,36 @@ module.exports = {
       self.loadSchemasSql(obj,function() {
 				/*inser the first users with roles and permissions*/
 
-				var role = {
-					name: 'Marduk',
-					info: '[{"desc":"Marduk sees everything"}]'
-				};
+				var role = [{
+					"name": "Marduk",
+					"info": [{"desc":"Marduk sees everything"}]
+				}];
+
+
+
+
 
 				self.insertData('dbroles',role,function(id){
 
 					var pass = crypto.createHash('md5').update('@eyes@eyes@eyes').digest("hex");
-					var user = {
-						name: 'Marduk',
-						user: 'Marduk',
-						key: pass,
-						info: '[{"desc":"Marduk sees everything"}]',
-						dbroles_id: id
-					};
+					var user = [{
+						"name": "Marduk",
+						"user": "Marduk",
+						"key": "pass",
+						"info": [{"desc":"Marduk sees everything"}],
+						"dbroles_id": id
+					}];
 
-					self.insertData('dbusers',user,function(id){
+					self.insertData('dbusers',user,function(id){});
 
-						var permissions = {
-							path: 'heavens',
-							action: 'Dance',
-							info: '[{"desc":"Marduk sees everything"}]',
-							dbroles_id: id
-						};
+					var permissions = [{
+						"path": "heavens",
+						"action": "Dance",
+						"info": [{"desc":"Marduk sees everything"}],
+						"dbroles_id": id
+					}];
 
-						self.insertData('dbusers',user,function(id){});
-
-					});
+					self.insertData('dbpermissions',permissions,function(id){});
 
 				});
 
