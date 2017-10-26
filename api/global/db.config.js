@@ -4,5 +4,6 @@ module.exports = {
   Dbname:'superherodb',
   host:'localhost',
   Port:'5432',
+  hashkey:'d6F3Efeq',
   dialect:'pg'
 }

@@ -7,6 +7,8 @@ module.exports = {
 	server: '',
 	validators: [],
 	endpoints: [],
+	cipherAlg: 'aes-256-ctr',
+	cipherKey: Dbconfig.hashkey,
 	helpers: require('./helper'),
 	getChildren: function(schema) {
 		var self = this;
@@ -112,13 +114,21 @@ module.exports = {
 	},
 	checkLogin:function(username,password,cb,err){
 		var self = this;
-		var query = self.DBSql('dbusers').where({ user: username }).select('key','id').then(function(result) {
+
+		var users = 'dbusers-'+Dbconfig.hashkey;
+		var id ='id_'+Dbconfig.hashkey;
+		var key = 'key_'+Dbconfig.hashkey;
+		var session = 'session_'+Dbconfig.hashkey;
+
+		var ConWhere =  JSON.parse('{ "id_'+Dbconfig.hashkey +'"":"'+ id +'"}');
+
+		var query = self.DBSql(users).where({ user: username }).select(id,key).then(function(result) {
         if (!result || !result[0])  {
 					err({ msg: 401, err:'username'});
           return;
         }
-        var pass = result[0].key;
-				var id = result[0].id;
+        var pass = result[0][key];
+				var id = result[0][id];
 				var passwordReqMD5 = crypto.createHash('md5').update(password).digest("hex");
         if (passwordReqMD5 === pass) {
 					var d1 =  new Date();
@@ -127,7 +137,7 @@ module.exports = {
 					var session = id + twoWeeksAhead + password;
 					var token =  crypto.createHash('md5').update(session).digest("hex");
         	cb({ msg: 202 , token:token});
-					self.DBSql('dbusers').update('session', token ).update('updated_at', 'NOW()').where({ id: id }).then(function(result) {});
+					self.DBSql(users).update(session, token ).update('updated_at', 'NOW()').where(ConWhere).then(function(result) {});
         } else {
 					err({ msg: 401 , err:'password'});
         }
@@ -137,26 +147,34 @@ module.exports = {
 	checkSession:function(session,username,path,action,cb,err){
 
 		var self = this;
+		var id ='id_'+Dbconfig.hashkey;
+		var session = 'session_'+Dbconfig.hashkey;
+		var path = 'path_'+Dbconfig.hashkey;
+		var action = 'action_'+Dbconfig.hashkey;
+		var dbroles_id = 'dbroles_id_'+Dbconfig.hashkey;
 
+		var users = 'dbusers-'+Dbconfig.hashkey;
+		var roles = 'dbroles-'+Dbconfig.hashkey;
+		var permissions = 'dbpermissions-'+Dbconfig.hashkey;
 
-		var query = self.DBSql('dbusers').where({ user: username }).select('session',self.DBSql.raw('dbusers.id as id'),'path','action',self.DBSql.raw('dbusers.id as id'))
-		.innerJoin('dbroles', 'dbusers.dbroles_id', '=', 'dbroles.id')
-		.innerJoin('dbpermissions', 'dbpermissions.dbroles_id', '=', 'dbroles.id').then(function(result) {
+		var query = self.DBSql(users).where({ user: username }).select(session,self.DBSql.raw(users+'.'+id+' as id'),path,action)
+		.innerJoin(roles, users+'.'+dbroles_id, '=', dbroles_id+'.'+id)
+		.innerJoin(permissions, permissions+'.'+dbroles_id, '=', dbroles_id+'.'+id).then(function(result) {
 
 			if (!result || !result[0])  {
 				err({ msg: 401, err:'username'});
 				return;
 			}
-			var Sid = result[0].session;
+			var Sid = result[0][session];
 			var updated_at = result[0].updated_at;
 			var id = result[0].id;
 			if(Sid){
 					if (session === Sid) {
 						for(var x in result){
 
-							if(result[x].path == 'heavens' || result[x].path == path)
+							if(result[x][path]== 'heavens' || result[x][path] == path)
 							{
-									if(result[x].action == action || result[x].action =='Dance')
+									if(result[x][action] == action || result[x][action] =='Dance')
 									{
 										cb();
 										break;
@@ -205,45 +223,50 @@ module.exports = {
 			if (models[index]) {
 				var model = models[index].model;
 				var title = models[index].title;
+				var tablename = self.encrypt(title);
 				console.log('Check Table > ' + title + ' index >' + index);
-				self.DBSql.schema.hasTable(title).then(function(exists) {
+				self.DBSql.schema.hasTable(tablename).then(function(exists) {
 					if (!exists) {
 						console.log('create Table > ' + title);
-						self.DBSql.schema.createTable(title, function(table) {
-							table.increments('id').primary();
+						self.DBSql.schema.createTable(tablename, function(table) {
+
+
+							table.increments(self.encrypt('id')).primary();
 
 							var uniques = [];
 							for (var y in model) {
 								var type = model[y].type;
 								var value = model[y].defaultValue;
 								var unique = model[y].unique;
+
+								var colname = self.encrypt(y);
 								if (type == 'string') {
-									table.string(y, 255).defaultTo(value);
+									table.string(colname, 255).defaultTo(value);
 								}
 								if (type == 'text') {
-									table.text(y).defaultTo(value);;
+									table.text(colname).defaultTo(value);;
 								}
 								if (type == 'int') {
-									table.integer(y).defaultTo(value);;
+									table.integer(colname).defaultTo(value);;
 								}
 								if (type == 'Bigint') {
-									table.bigInteger(y).defaultTo(value);
+									table.bigInteger(colname).defaultTo(value);
 								}
 								if (type == 'float') {
-									table.float(y).defaultTo(value);;
+									table.float(colname).defaultTo(value);;
 								}
 								if (type == 'boolean') {
-									table.boolean(y).defaultTo(value);;
+									table.boolean(colname).defaultTo(value);;
 								}
 								if (type == 'json') {
-									table.json(y).defaultTo(value);;
+									table.json(colname).defaultTo(value);;
 								}
 								if (type == 'datetime') {
-									table.timestamp(y).defaultTo(value)
+									table.timestamp(colname).defaultTo(value)
 								}
 								if(unique == 1)
 								{
-										uniques.push(y)
+										uniques.push(colname)
 								}
 							}
 							if(uniques.length > 0)
@@ -254,11 +277,11 @@ module.exports = {
 							if (parents[title]) {
 								for (var z in parents[title]) {
 									var children = parents[title][z];
-									table.integer(children + '_id').unsigned().references('id').inTable(children);
+									table.integer(self.encrypt(children + '_id')).unsigned().references(self.encrypt('id')).inTable(self.encrypt(children));
 								}
 							}
-							table.timestamp('created_at').notNullable().defaultTo(self.DBSql.raw('now()'));
-							table.timestamp('updated_at');
+							table.timestamp(self.encrypt('created_at')).notNullable().defaultTo(self.DBSql.raw('now()'));
+							table.timestamp(self.encrypt('updated_at'));
 						}).then(function(resp) {
 							index--;
 							return createTable(index, callback);
@@ -276,11 +299,78 @@ module.exports = {
 		}
 		createTable(models.length - 1, cb);
 	},
+	encrypt: function (string){
+		var self = this;
+		var cipher = crypto.createCipher(self.cipherAlg,self.cipherKey)
+		var encrypted = cipher.update(string, 'utf8', 'hex') + cipher.final('hex');
+		return encrypted;
+
+	},
+	decrypt: function (string){
+		var self = this;
+		var decipher = crypto.createDecipher(self.cipherAlg, self.cipherKey);
+		var decrypted = decipher.update(string, 'hex', 'utf8') + decipher.final('utf8');
+		return decrypted;
+	},
+	encryptObj: function (obj){
+		var self = this;
+		var encObj = {};
+
+		for(var x in obj)
+		{
+			var y = self.encrypt(x);
+			var each =  obj[x];
+			var flag = 0;
+			try{
+				var json = JSON.parse(each);
+				flag = 1;
+			}
+			catch(e)
+			{}
+
+			if(flag == 1)
+			{
+				  var each  =  [];
+					for(var z in json)
+					{
+							each.push(self.encryptObj(json[z]))
+					}
+					var myJSON = JSON.stringify(each);
+					encObj[y] = myJSON;
+
+			}
+			else {
+
+					encObj[y] = self.encrypt(each);
+			}
+
+		}
+
+		return encObj;
+	},
 	loadSchemasNosql: function(obj, cb) {
 		var self = this;
 	},
 	validate: function(tableName, data, cb) {},
-	insertData: function(tableName, data, cb) {},
+	insertData: function(tableName, data, cb) {
+
+		console.log(tableName);
+		console.log(data);
+
+
+		var self = this;
+		var encdata = self.encryptObj(data);
+		var encid = self.encrypt('id');
+		var enctable =  self.encrypt(tableName);
+
+		self.DBSql.insert(encdata).returning(encid).into(enctable).then(function(id) {
+			var id =  self.decrypt(id[0]);
+			console.log(id)
+				cb(id);
+		});
+
+
+	},
 	updateData: function(tableName, data, cb) {},
 	updateTable: function(tableName, data, cb) {},
 	removeTable: function(tableName, data, cb) {},
@@ -289,35 +379,46 @@ module.exports = {
 	init: function(app, cb) {
 		var self = this;
 		var object = self.helpers.readJson('api/models/global/*.json', function(obj) {
-			self.loadSchemasSql(obj,function() {
+
+      self.loadSchemasSql(obj,function() {
 				/*inser the first users with roles and permissions*/
+
 				var role = {
 					name: 'Marduk',
 					info: '[{"desc":"Marduk sees everything"}]'
 				};
-				cb();
-				self.DBSql.insert(role).returning('id').into('dbroles').then(function(id) {
+
+				self.insertData('dbroles',role,function(id){
+
 					var pass = crypto.createHash('md5').update('@eyes@eyes@eyes').digest("hex");
 					var user = {
 						name: 'Marduk',
 						user: 'Marduk',
 						key: pass,
 						info: '[{"desc":"Marduk sees everything"}]',
-						dbroles_id: id[0]
+						dbroles_id: id
 					};
-					self.DBSql.insert(user).returning('id').into('dbusers').then(function() {});
-					var permissions = {
-						path: 'heavens',
-						action: 'Dance',
-						info: '[{"desc":"Marduk sees everything"}]',
-						dbroles_id: id[0]
-					};
-					self.DBSql.insert(permissions).returning('id').into('dbpermissions').then(function() {
+
+					self.insertData('dbusers',user,function(id){
+
+						var permissions = {
+							path: 'heavens',
+							action: 'Dance',
+							info: '[{"desc":"Marduk sees everything"}]',
+							dbroles_id: id
+						};
+
+						self.insertData('dbusers',user,function(id){});
 
 					});
+
 				});
+
+
 			});
-		});
+
+
+    });
 		self.DBSql = require('knex')({
 			client: Dbconfig.dialect,
 			connection: {

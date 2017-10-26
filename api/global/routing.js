@@ -31,26 +31,28 @@ module.exports = function(app,dbs)
     },function(err){
       res.status(err.msg).json(err);
     });
-  })
+  });
+
+  
   app.get('/api/*', function (req, res) {
-    var requesturl = req.url.replace('/spi/','');
+    var requesturl = req.url.replace('/api/','');
     res.send('get request to the API');
+
+
+
   })
 
 
-  app.post('/api/*', function (req, res) {
-    var requesturl = req.url.replace('/spi/','');
+  app.post('/api/:table/', function (req, res) {
     res.send('post request to the API')
   });
 
-  app.delete('/api/*', function (req, res) {
-    var requesturl = req.url.replace('/spi/','');
+  app.delete('/api/:table/:id', function (req, res) {
     res.send('delete request to the API')
   });
 
-  app.put('/api/*', function (req, res) {
-    var requesturl = req.url.replace('/spi/','');
-    res.send('put request to the API')
+  app.put('/api/:table/:id', function (req, res) {
+    res.send('put request to the API');
   });
 
   app.listen(3000, function(){
