@@ -316,32 +316,35 @@ module.exports = {
 		var encObj = {};
 
 
-		for(var x in obj)
-		{
-			var y = self.encrypt(x);
-			var each =  obj[x];
-			var flag = 0;
+			for (var o in obj) {
+				if (typeof obj[o] == "object") {
+						flag = 1;
+						break;
+				}
+				else {
 
-			for (var o in each) {
-					if (typeof obj[o] == "object") {
-							flag = 1;
-							break;
-					}
+				}
 			}
 
 			if(flag == 1)
 			{
-				  var each  =  [];
-					for(var z in json)
-					{
-							each.push(self.encryptObj(json[z]))
-					}
-					var myJSON = JSON.stringify(each);
-					encObj[y] = myJSON;
+
+					var each  =  [];
+					 for(var z in json)
+					 {
+
+
+					 }
+					 var myJSON = JSON.stringify(each);
+					 encObj[y] = myJSON;
 
 			}
 			else {
 
+				for(var x in obj)
+				{
+					var y = self.encrypt(x);
+					var each =  obj[x];
 					if(x.indexOf('_id') > -1)
 					{
 						encObj[y] =  obj[x];
@@ -349,11 +352,8 @@ module.exports = {
 					else {
 						encObj[y] = self.encrypt(each);
 					}
-
+				}
 			}
-
-		}
-
 		return encObj;
 	},
 	loadSchemasNosql: function(obj, cb) {
