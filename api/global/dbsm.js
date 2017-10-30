@@ -313,47 +313,40 @@ module.exports = {
 	},
 	encryptObj: function (obj){
 		var self = this;
+
 		var encObj = {};
+		var flag = 0;
+		if(  obj.constructor === Array)
+		{
+				flag = 1;
+				var encObj = [];
+		}
 
+		for (var o in obj) {
 
-			for (var o in obj) {
+				var each ='';
+				var y = self.encrypt(o);
 				if (typeof obj[o] == "object") {
-						flag = 1;
-						break;
+					var encrypted = self.encryptObj(obj[o]);
+					each = JSON.stringify(encrypted);
 				}
 				else {
-
-				}
-			}
-
-			if(flag == 1)
-			{
-
-					var each  =  [];
-					 for(var z in json)
-					 {
-
-
-					 }
-					 var myJSON = JSON.stringify(each);
-					 encObj[y] = myJSON;
-
-			}
-			else {
-
-				for(var x in obj)
-				{
-					var y = self.encrypt(x);
-					var each =  obj[x];
-					if(x.indexOf('_id') > -1)
-					{
-						encObj[y] =  obj[x];
-					}
-					else {
-						encObj[y] = self.encrypt(each);
+					if(o.indexOf('_id') > -1){
+						each =  obj[o];
+					} else {
+						each = self.encrypt(obj[o]);
 					}
 				}
+
+
+				if(flag == 1) {
+					encObj.push(each);
+				} else {
+					encObj[y] = each;
+				}
+
 			}
+
 		return encObj;
 	},
 	loadSchemasNosql: function(obj, cb) {
@@ -366,24 +359,22 @@ module.exports = {
 		var encdata = self.encryptObj(data);
 		var encid = self.encrypt('id');
 		var enctable =  self.encrypt(tableName);
-		self.DBSql.insert(encdata).returning(encid).into(enctable).then(function(id) {
-			console.log()
-			var id =  id[0];
-				cb(id);
-		}).catch(function(error) {
-				if(err)
-				{
-					err();
-				}
- 				if(cb)
-				{
-					self.DBSql(enctable).select(encid).orderBy(encid, 'desc').limit(1).then(function(result) {
-						var id = result[0][encid];
-						console.log(id);
-						cb(id);
-					});
-				}
-		});
+
+
+				self.DBSql.insert(encdata).returning(encid).into(enctable).then(function(id) {
+					var id =  id[0];
+					cb(id);
+				}).catch(function(error) {
+						if(err){
+							err();
+						}
+		 				if(cb){
+							self.DBSql(enctable).select(encid).orderBy(encid, 'desc').limit(1).then(function(result) {
+								var id = result[0][encid];
+								cb(id);
+							});
+						}
+				});
 
 
 	},
@@ -399,34 +390,30 @@ module.exports = {
       self.loadSchemasSql(obj,function() {
 				/*inser the first users with roles and permissions*/
 
-				var role = [{
+				var role = {
 					"name": "Marduk",
 					"info": [{"desc":"Marduk sees everything"}]
-				}];
-
-
-
-
+				};
 
 				self.insertData('dbroles',role,function(id){
 
 					var pass = crypto.createHash('md5').update('@eyes@eyes@eyes').digest("hex");
-					var user = [{
+					var user = {
 						"name": "Marduk",
 						"user": "Marduk",
 						"key": "pass",
 						"info": [{"desc":"Marduk sees everything"}],
 						"dbroles_id": id
-					}];
+					};
 
 					self.insertData('dbusers',user,function(id){});
 
-					var permissions = [{
+					var permissions = {
 						"path": "heavens",
 						"action": "Dance",
 						"info": [{"desc":"Marduk sees everything"}],
 						"dbroles_id": id
-					}];
+					};
 
 					self.insertData('dbpermissions',permissions,function(id){});
 
