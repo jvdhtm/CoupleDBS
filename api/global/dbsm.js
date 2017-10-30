@@ -352,6 +352,54 @@ module.exports = {
 	loadSchemasNosql: function(obj, cb) {
 		var self = this;
 	},
+	decryptObj:function (obj){
+		var self = this;
+
+		var encObj = {};
+		var flag = 0;
+		if(  obj.constructor === Array)
+		{
+				flag = 1;
+				var encObj = [];
+		}
+
+		for (var o in obj) {
+
+				var each ='';
+				console.log(o);
+				var y = self.decrypt(o);
+
+				console.log('xhwxk');
+				console.log(y);
+				console.log(typeof obj[o]);
+				if (obj[o] && typeof obj[o] === "object"  &&  y.indexOf('_at') == -1) {
+					console.log('obje')
+					console.log(obj[o]);
+					var dcrypted = self.decryptObj(JSON.parse(obj[o]));
+					each = dcrypted;
+				}
+				else {
+
+	console.log('not obje')
+					if(y.indexOf('id') > -1 || y.indexOf('_at') > -1 || obj[o] == null){
+						each =  obj[o];
+					} else {
+						console.log(obj[o]);
+						each = self.decrypt(obj[o]);
+					}
+				}
+
+
+				if(flag == 1) {
+					encObj.push(each);
+				} else {
+					encObj[y] = each;
+				}
+
+			}
+
+		return encObj;
+	},
 	validate: function(tableName, data, cb) {},
 	insertData: function(tableName, data, cb,err) {
 
@@ -369,8 +417,16 @@ module.exports = {
 							err();
 						}
 		 				if(cb){
-							self.DBSql(enctable).select(encid).orderBy(encid, 'desc').limit(1).then(function(result) {
+							self.DBSql(enctable).select('*').orderBy(encid, 'desc').limit(1).then(function(result) {
+
+
+
 								var id = result[0][encid];
+								console.log(result[0]);
+								var decrypt = self.decryptObj(result[0]);
+
+								console.log(decrypt);
+
 								cb(id);
 							});
 						}
