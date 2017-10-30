@@ -366,30 +366,21 @@ module.exports = {
 		for (var o in obj) {
 
 				var each ='';
-				console.log(o);
 				var y = self.decrypt(o);
-
-				console.log('xhwxk');
-				console.log(y);
-				console.log(typeof obj[o]);
 				if (obj[o] && typeof obj[o] === "object"  &&  y.indexOf('_at') == -1) {
-					console.log('obje')
-					console.log(obj[o]);
+
+					for()
+
 					var dcrypted = self.decryptObj(JSON.parse(obj[o]));
 					each = dcrypted;
 				}
 				else {
-
-	console.log('not obje')
-					if(y.indexOf('id') > -1 || y.indexOf('_at') > -1 || obj[o] == null){
+					if(y.indexOf('id') > -1 || y.indexOf('_at') > -1 ||  typeof obj[o] == null || obj[o] == 0){
 						each =  obj[o];
 					} else {
-						console.log(obj[o]);
 						each = self.decrypt(obj[o]);
 					}
 				}
-
-
 				if(flag == 1) {
 					encObj.push(each);
 				} else {
@@ -418,15 +409,9 @@ module.exports = {
 						}
 		 				if(cb){
 							self.DBSql(enctable).select('*').orderBy(encid, 'desc').limit(1).then(function(result) {
-
-
-
 								var id = result[0][encid];
-								console.log(result[0]);
 								var decrypt = self.decryptObj(result[0]);
-
 								console.log(decrypt);
-
 								cb(id);
 							});
 						}
@@ -448,7 +433,7 @@ module.exports = {
 
 				var role = {
 					"name": "Marduk",
-					"info": [{"desc":"Marduk sees everything"}]
+					"info": [{"desc":"Marduk sees everything","man":"test"},{"desc":"Marduk sees everything"}]
 				};
 
 				self.insertData('dbroles',role,function(id){
