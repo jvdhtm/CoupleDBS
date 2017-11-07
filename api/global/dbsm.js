@@ -369,7 +369,10 @@ module.exports = {
 				var y = self.decrypt(o);
 				if (obj[o] && typeof obj[o] === "object"  &&  y.indexOf('_at') == -1) {
 
-					for()
+					for(var z in obj[o])
+					{
+						
+					}
 
 					var dcrypted = self.decryptObj(JSON.parse(obj[o]));
 					each = dcrypted;
